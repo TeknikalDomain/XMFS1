@@ -46,7 +46,12 @@ namespace untitledApplication
                         for (int e = 0; e < workingElement.ChildNodes.Count; e++)
                         {
                             XmlElement cElm = (XmlElement)workingElement.ChildNodes.Item(e);
+                            if (cElm.LocalName == "folder")
+                            {
+                                Console.ForegroundColor = ConsoleColor.Blue;
+                            }
                             Console.Write("{0}:{1}\t", e, cElm.GetAttribute("name"));
+                            Console.ForegroundColor = ConsoleColor.White;
                         }
                         Console.Write("\n");
                         break;
@@ -73,20 +78,10 @@ namespace untitledApplication
                         break;
 
                     case "RMDIR":
-                        if (input.Split(' ')[1] == "-f") 
-                        {
-                            workingElement.RemoveChild(searchByID(input.Split(' ')[2]));
-                            break;
-                        }
                         XmlElement folder = searchByID(input.Split(' ')[1]);
                         if(folder == null)
                         {
                             Console.WriteLine("Error: folder does not exist.");
-                            break;
-                        }
-                        if(!folder.IsEmpty)
-                        {
-                            Console.WriteLine("Error: folder is not empty.");
                             break;
                         }
                         workingElement.RemoveChild(folder);
@@ -126,7 +121,12 @@ namespace untitledApplication
                 Console.WriteLine("Error: Invalid node type.");
                 return false;
             }
-            return true;
+            if (workingElement.LocalName == "folder")
+            {
+                return true;
+            }
+            Console.WriteLine("Error: Not a folder.");
+            return false;
         }
 
         static bool DCD(XmlNode newElement)
@@ -146,15 +146,12 @@ namespace untitledApplication
             {
                 return false;
             }
-            if (changeElement(workingElement.ParentNode))
+            workingElement = workingElement.ParentNode;
+            do
             {
-                do
-                {
-                    workingString = workingString.Remove(workingString.Length - 1);
-                } while (!workingString.EndsWith("/"));
-                return true;
-            }
-            return false;
+                workingString = workingString.Remove(workingString.Length - 1);
+            } while (!workingString.EndsWith("/"));
+            return true;
         }
         #endregion
 

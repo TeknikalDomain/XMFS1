@@ -4,8 +4,7 @@
     <home>/home</home>
   </configuration>
   <filesystem>
-    <folder name="merp">
-      <folder name="test2" />
+    <folder name="home">
     </folder>
   </filesystem>
 </XMFS>
