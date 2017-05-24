@@ -6,14 +6,14 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.IO;
 
-namespace untitledApplication
+namespace XMFS
 {
-    class Program
+    public class Program
     {
         static string filename;
-        static XmlElement workingElement;
+        public static XmlElement workingElement;
         static string workingString = "/";
-        static XmlDocument mainDoc;
+        public static XmlDocument mainDoc;
         const string PROMPT = " $ ";
         static void Main(string[] args)
         {
@@ -31,6 +31,7 @@ namespace untitledApplication
             mainDoc = new XmlDocument();
             mainDoc.Load(filename);
             workingElement = (XmlElement)mainDoc.DocumentElement.ChildNodes.Item(1);
+            DCD(SearchByName("home"));
             while (true)
             {
                 Console.Write(workingString+PROMPT);
@@ -78,7 +79,7 @@ namespace untitledApplication
                         break;
 
                     case "RMDIR":
-                        XmlElement folder = searchByID(input.Split(' ')[1]);
+                        XmlElement folder = SearchByID(input.Split(' ')[1]);
                         if(folder == null)
                         {
                             Console.WriteLine("Error: folder does not exist.");
@@ -87,13 +88,23 @@ namespace untitledApplication
                         workingElement.RemoveChild(folder);
                         break;
 
+                    case "RM":
+                        XmlElement file = SearchByID(input.Split(' ')[1]);
+                        if(file == null)
+                        {
+                            Console.WriteLine("Error: file does not exist.");
+                            break;
+                        }
+                        workingElement.RemoveChild(file);
+                        break;
+
                     case "CD":
                         if (input.Split(' ')[1] == "..")
                         {
                             DCU();
                             break;
                         }
-                        XmlElement nWDF = searchByID(input.Split(' ')[1]);
+                        XmlElement nWDF = SearchByID(input.Split(' ')[1]);
                         if (nWDF == null)
                         {
                             Console.WriteLine("Error: folder does not exist.");
@@ -101,6 +112,10 @@ namespace untitledApplication
                         }
                         DCD(nWDF);
                         break; 
+
+                    case "ED":
+                        TextEditor.Run(input.Split(' ')[1]);
+                        break;
 
                     default:
                         Console.WriteLine("Error: Unknown command: \"{0}\"", input);
@@ -110,7 +125,7 @@ namespace untitledApplication
         }
 
         #region cd functions
-        static bool changeElement(XmlNode newWorkingElement)
+        static bool ChangeElement(XmlNode newWorkingElement)
         {
             try
             {
@@ -131,7 +146,7 @@ namespace untitledApplication
 
         static bool DCD(XmlNode newElement)
         {
-            if (changeElement(newElement))
+            if (ChangeElement(newElement))
             {
                 XmlElement cElm = (XmlElement)newElement;
                 workingString = workingString + cElm.GetAttribute("name") + "/";
@@ -146,7 +161,7 @@ namespace untitledApplication
             {
                 return false;
             }
-            workingElement = workingElement.ParentNode;
+            workingElement = (XmlElement)workingElement.ParentNode;
             do
             {
                 workingString = workingString.Remove(workingString.Length - 1);
@@ -155,7 +170,7 @@ namespace untitledApplication
         }
         #endregion
 
-        static XmlElement searchByName(string elementName)
+        public static XmlElement SearchByName(string elementName)
         {
             for (int e = 0; e < workingElement.ChildNodes.Count; e++)
             {
@@ -168,7 +183,7 @@ namespace untitledApplication
             return null;
         }
 
-        static XmlElement searchByID(string elementID)
+        public static XmlElement SearchByID(string elementID)
         {
             try
             {
@@ -178,7 +193,58 @@ namespace untitledApplication
             catch (System.Exception)
             {
             }
-            return searchByName(elementID);
+            return SearchByName(elementID);
+        }
+    }
+
+    class TextEditor
+    {
+        static string[] lines;
+        public static void Run(string filename)
+        {
+            XmlElement file = Program.SearchByID(filename);
+            if (file == null)
+            {
+                CreateFile(filename);
+            }
+            else
+            {
+                LoadFile(file.GetAttribute("name"), file.InnerText);
+            }
+            return;
+        }
+
+        static void CreateFile(string filename)
+        {
+            try
+            {
+                Int32.Parse(filename);
+            }
+            catch (System.Exception)
+            {
+                XmlElement newFile = Program.mainDoc.CreateElement("file");
+                newFile.SetAttribute("name", filename);
+                newFile.SetAttribute("exe", "false");
+                Program.workingElement.AppendChild(newFile);
+                LoadFile(filename, null);
+                return;
+            }
+            Console.WriteLine("Error: filenames cannot be integers.");
+            return;
+        }
+
+        static void LoadFile(string filename, string fileText)
+        {
+            XmlElement file = Program.SearchByName(filename);
+            string[] rawLines = fileText.Split('\n');
+            lines = new string[rawLines.Length - 2];
+            for (int l = 1; l < rawLines.Length-1; l++)
+            {
+                lines[l-1] = rawLines[l].Trim();
+                Console.WriteLine(lines[l-1]);
+            }
+            Console.WriteLine(lines.Length);
+            return;
         }
     }
 }

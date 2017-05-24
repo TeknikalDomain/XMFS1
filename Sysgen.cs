@@ -27,12 +27,10 @@ namespace untitledApplication
             doc.AppendChild(XEXMFS);
             XmlElement XEConfig = doc.CreateElement("configuration");
             XEXMFS.AppendChild(XEConfig);
-            XmlElement XEConfigHome = doc.CreateElement("home");
-            XEConfig.AppendChild(XEConfigHome);
-            XmlText XTConfigHomeCDATA = doc.CreateTextNode("/home");
-            XEConfigHome.AppendChild(XTConfigHomeCDATA);
             XmlElement XEFilesystem = doc.CreateElement("filesystem");
             XEXMFS.AppendChild(XEFilesystem);
+            XmlElement XEFsHome = doc.CreateElement("home");
+            XEFilesystem.AppendChild(XEFsHome);
             doc.Save(filename);
         }
     }
