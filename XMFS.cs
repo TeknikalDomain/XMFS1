@@ -200,6 +200,7 @@ namespace XMFS
     class TextEditor
     {
         static string[] lines;
+        static int lineCount;
         public static void Run(string filename)
         {
             XmlElement file = Program.SearchByID(filename);
@@ -238,12 +239,51 @@ namespace XMFS
             XmlElement file = Program.SearchByName(filename);
             string[] rawLines = fileText.Split('\n');
             lines = new string[rawLines.Length - 2];
+            Console.Write("Loading file...");
             for (int l = 1; l < rawLines.Length-1; l++)
             {
                 lines[l-1] = rawLines[l].Trim();
-                Console.WriteLine(lines[l-1]);
             }
-            Console.WriteLine(lines.Length);
+            Console.WriteLine("Done\nTotal lines in file: {0}", lines.Length);
+            lineCount = lines.Length;
+            int currentLine = 1;
+            int lineStep;
+            /* COMMANDS:
+             * l: go to line
+             * a: add line
+             * d: delete line
+             * r: replace line
+             * w: writeOut
+             * q: quit
+             */
+             bool running = true;
+             string input;
+             bool dirtyCopy = false;
+             bool lineExists;
+             while (running)
+             {
+                if (currentLine > lineCount)
+                {
+                    lineExists = false;
+                }
+                else
+                {
+                    lineExists = true;
+                }
+                Console.Write("[{0}] {1} ", currentLine, lineExists ? "-" : "*");
+                char KP = (char)Console.Read();
+                Console.Write("\n");
+                switch (Char.ToUpper(KP))
+                {
+                    case 'Q':
+                        running = false;
+                        break;
+
+                    default:
+                        Console.WriteLine("Error: Invalid command.");
+                        break;
+                }
+             }
             return;
         }
     }
