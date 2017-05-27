@@ -6,6 +6,7 @@
   <filesystem>
     <folder name="home">
       <file name="test.txt" exe="false">
+        This is a test
         file that I wrote directly
         into the file with an external editor.
 
