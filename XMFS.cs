@@ -237,19 +237,29 @@ namespace XMFS
         static void LoadFile(string filename, string fileText)
         {
             XmlElement file = Program.SearchByName(filename);
-            string[] rawLines = fileText.Split('\n');
-            lines = new string[rawLines.Length - 2];
-            Console.Write("Loading file...");
-            for (int l = 1; l < rawLines.Length-1; l++)
+            if (fileText == null)
             {
-                lines[l-1] = rawLines[l].Trim();
+                lines = new string[256];
+                lineCount = 0;
+                Console.WriteLine("New file.");
             }
-            Console.WriteLine("Done\nTotal lines in file: {0}", lines.Length);
-            lineCount = lines.Length;
+            else
+            {
+                string[] rawLines = fileText.Split('\n');
+                lines = new string[rawLines.Length - 2];
+                Console.Write("Loading file...");
+                for (int l = 1; l < rawLines.Length-1; l++)
+                {
+                    lines[l-1] = rawLines[l].Trim();
+                }
+                Console.WriteLine("Done\nTotal lines in file: {0}", lines.Length);
+                lineCount = lines.Length;
+            }
             int currentLine = 1;
-            int lineStep;
             /* COMMANDS:
              * l: go to line
+             * s: show file
+             * v: view current line
              * a: add line
              * d: delete line
              * r: replace line
@@ -257,8 +267,6 @@ namespace XMFS
              * q: quit
              */
              bool running = true;
-             string input;
-             bool dirtyCopy = false;
              bool lineExists;
              while (running)
              {
@@ -273,10 +281,99 @@ namespace XMFS
                 Console.Write("[{0}] {1} ", currentLine, lineExists ? "-" : "*");
                 char KP = (char)Console.Read();
                 Console.Write("\n");
-                switch (Char.ToUpper(KP))
+                switch (char.ToUpper(KP))
                 {
                     case 'Q':
-                        running = false;
+                        Console.Write("Really quit? [y/N] ");
+                        KP = (char)Console.Read();
+                        Console.Write("\n");
+                        if (char.ToUpper(KP) == 'Y')
+                        {
+                            running = false;
+                            break;
+                        }
+                        else if (char.ToUpper(KP) == 'N')
+                        {
+                            break;
+                        }
+                        else if ((int)KP == 10)
+                        {
+                            break;
+                        }
+                        Console.WriteLine("Error: Invalid option.");
+                        break;
+
+                    case 'L':
+                        try
+                        {
+                            Console.Write("? ");
+                            currentLine = Int32.Parse(Console.ReadLine());
+                        }
+                        catch (System.Exception)
+                        {
+                            Console.WriteLine("Error: not a number.");
+                        }
+                        break;
+
+                    case 'S':
+                        for (int l = 0; l < lineCount; l++)
+                        {
+                            Console.WriteLine("{0}: {1}", l+1, lines[l]);
+                        }
+                        break;
+
+                    case 'V':
+                        if (lineExists)
+                        {
+                            Console.WriteLine(lines[currentLine]);
+                        }
+                        else
+                        {
+                            Console.WriteLine("Line does not exist.");
+                        }
+                        break;
+
+                    case 'A':
+                        lines = RescaleLines(lines, 1);
+                        for (int l = lineCount; l >= currentLine; l--)
+                        {
+                            lines[l] = lines[l-1];
+                        }
+                        lineCount++;
+                        lines[currentLine - 1] = "";
+                        break;
+
+                    case 'D':
+                        for (int l = currentLine; l < lineCount; l++)
+                        {
+                            lines[l-1] = lines[l];
+                        }
+                        if (lineCount > 0)
+                        {
+                            lineCount--;
+                        }
+                        break;
+
+                    case 'R':
+                        if (!lineExists)
+                        {
+                            lines = RescaleLines(lines, currentLine - lineCount);
+                            lineCount = currentLine;
+                        }
+                        Console.Write(":");
+                        lines[currentLine - 1] = Console.ReadLine();
+                        if (!lineExists)
+                        {
+                            currentLine++;
+                        }
+                        break;
+
+                    case 'W':
+                        file.InnerText = "\n";
+                        for (int l = 0; l < lineCount; l++)
+                        {
+                            file.InnerText = file.InnerText + lines[l] + "\n";
+                        }
                         break;
 
                     default:
@@ -285,6 +382,16 @@ namespace XMFS
                 }
              }
             return;
+        }
+
+        static string[] RescaleLines(string[] lineArray, int increase)
+        {
+            string[] newLines = new string[lineArray.Length + increase];
+            for (int l = 0; l < lineArray.Length; l++)
+            {
+                newLines[l] = lineArray[l];
+            }
+            return newLines;
         }
     }
 }
